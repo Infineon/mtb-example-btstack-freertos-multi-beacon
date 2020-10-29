@@ -2,11 +2,22 @@
 
 This code example demonstrates the implementation of a beacon which advertises multiple Eddystone ADV data.
 
+[Provide feedback on this Code Example.](https://cypress.co1.qualtrics.com/jfe/form/SV_1NTns53sK2yiljn?Q_EED=eyJVbmlxdWUgRG9jIElkIjoiQ0UyMzAyOTMiLCJTcGVjIE51bWJlciI6IjAwMi0zMDI5MyIsIkRvYyBUaXRsZSI6IkFueUNsb3VkIEV4YW1wbGU6IE11bHRpIEJlYWNvbiIsInJpZCI6ImFta2EiLCJEb2MgdmVyc2lvbiI6IjIuMC4wIiwiRG9jIExhbmd1YWdlIjoiRW5nbGlzaCIsIkRvYyBEaXZpc2lvbiI6Ik1DRCIsIkRvYyBCVSI6IklDVyIsIkRvYyBGYW1pbHkiOiJQU09DIn0=)
+
 ## Requirements
 
-- [ModusToolbox™ software](https://www.cypress.com/products/modustoolbox-software-environment) v2.1
+- [ModusToolbox™ software](https://www.cypress.com/products/modustoolbox-software-environment) v2.2
+
+   **Note:** This code example version requires ModusToolbox software version 2.2 or later and is not backward compatible with v2.1 or older versions. If you cannot move to ModusToolbox v2.2, use the latest compatible version of this example: [latest-v1.X](https://github.com/cypresssemiconductorco/mtb-example-anycloud-ble-multi-beacon/tree/latest-v1.X).
+
+- Board Support Package (BSP) minimum required version: 2.0.0
 - Programming Language: C
-- Associated Parts: [PSoC® 6 MCU](http://www.cypress.com/PSoC6) parts with BLE, CYW43012, CYW4343W
+- Associated Parts: [PSoC® 6 MCU](http://www.cypress.com/PSoC6) parts with CYW43012, CYW4343W
+
+## Supported Toolchains (make variable 'TOOLCHAIN')
+
+- GNU Arm Embedded Compiler v9.3.1 (GCC_ARM) - Default value of `TOOLCHAIN`
+- IAR C/C++ compiler v8.42.2 (IAR)
 
 ## Supported Kits
 
@@ -17,6 +28,8 @@ This code example demonstrates the implementation of a beacon which advertises m
 
 ## Hardware Setup
 This example uses the kit’s default configuration. See the respective kit guide to ensure that the kit is configured correctly.
+
+**Note:** The PSoC 6 WiFi-BT Pioneer Kit (CY8CKIT-062-WIFI-BT) ships with KitProg2 installed. The ModusToolbox software requires KitProg3. Before using this code example, make sure that the board is upgraded to KitProg3. The tool and instructions are available in the Firmware Loader GitHub repository. If you do not upgrade, you will see an error like "unable to find CMSIS-DAP device" or "KitProg firmware is out of date".
 
 ## Software Setup
 This code example consists of two parts: a Broadcaster and an Observer.
@@ -124,7 +137,9 @@ For more details, see the "Exporting to IDEs" section of the ModusToolbox User G
 
 ## Debugging
 
-You can debug the example to step through the code. In the IDE, use the **\<Application Name> Debug (KitProg3)** configuration in the **Quick Panel**. For more details, see the "Program and Debug" section in the Eclipse IDE for ModusToolbox User Guide: *{ModusToolbox install directory}/ide_{version}/docs/mt_ide_user_guide.pdf*.
+You can debug the example to step through the code. In the IDE, use the **\<Application Name> Debug (KitProg3_MiniProg4)** configuration in the **Quick Panel**. For more details, see the "Program and Debug" section in the [Eclipse IDE for ModusToolbox User Guide](https://www.cypress.com/MTBEclipseIDEUserGuide).
+
+**Note:** **(Only while debugging)** On the CM4 CPU, some code in `main()` may execute before the debugger halts at the beginning of `main()`. This means that some code executes twice - once before the debugger stops execution, and again after the debugger resets the program counter to the beginning of `main()`. See [KBA231071](https://community.cypress.com/docs/DOC-21143) to learn about this and for the workaround.
 
 ## Design and Implementation
 The ‘Multi Beacon’ is a GAP Broadcaster. It advertises two sets of Eddystone data: URL (www.infineon.com) and a UID (Unique Identifier).
@@ -171,10 +186,11 @@ Document Title: CE230293 – AnyCloud: Multi Beacon
 | Version | Description of Change |
 | ------- | --------------------- |
 | 1.0.0   | New code example      |
+| 2.0.0   | Major update to support ModusToolbox software v2.2<br> This version is not backward compatible with ModusToolbox software v2.1  |
 
 ------
 
-![Banner](images/banner.png)
+![ifx-cy-banner.png](images/ifx-cy-banner.png)
 
 -------------------------------------------------------------------------------
 

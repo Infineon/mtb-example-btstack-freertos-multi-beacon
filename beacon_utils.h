@@ -93,17 +93,29 @@ typedef struct
     wiced_bt_ble_advert_type_t advert_type;         /* Advertisement data type */
 }beacon_ble_advert_elem_t;
 
+/* Structure to hold eddystone URL parameters */
+typedef struct __attribute__((packed, aligned(1)))
+{
+    uint8_t tx_power;                                      /* ADV Tx Power */
+    uint8_t urlscheme;                                       /* URL Scheme */
+    uint8_t encoded_url[EDDYSTONE_URL_VALUE_MAX_LEN];               /* URL */
+}eddystone_url_t;
+
+/* Structure to hold eddystone UID parameters */
+typedef struct __attribute__((packed, aligned(1)))
+{
+    uint8_t eddystone_ranging_data;                            /* Calibrated TX power */
+    uint8_t eddystone_namespace[EDDYSTONE_UID_NAMESPACE_LEN];  /* UID namespace */
+    uint8_t eddystone_instance[EDDYSTONE_UID_INSTANCE_ID_LEN]; /* Instance */
+}eddystone_uid_t;
+
 /****************************************************************************
  *                              FUNCTION DECLARATIONS
  ***************************************************************************/
-void eddystone_set_data_for_uid(uint8_t eddystone_ranging_data,
-                                uint8_t eddystone_namespace[EDDYSTONE_UID_NAMESPACE_LEN],
-                                uint8_t eddystone_instance[EDDYSTONE_UID_INSTANCE_ID_LEN],
+void eddystone_set_data_for_uid(eddystone_uid_t uid_data,
                                 uint8_t adv_data[BEACON_ADV_DATA_MAX], uint8_t *adv_len);
 
-void eddystone_set_data_for_url(uint8_t tx_power,
-                                uint8_t urlscheme,
-                                uint8_t encoded_url[EDDYSTONE_URL_VALUE_MAX_LEN],
+void eddystone_set_data_for_url(eddystone_url_t url_data,
                                 uint8_t adv_data[BEACON_ADV_DATA_MAX], uint8_t *adv_len);
 
 void eddystone_set_data_common(beacon_ble_advert_elem_t *eddystone_adv_elem,

@@ -40,7 +40,6 @@
 #include "wiced_bt_stack.h"
 #include "beacon_utils.h"
 
-
 /**************************************************************************************************
 * Function Name: eddystone_set_data_for_uid()
 ***************************************************************************************************
@@ -48,34 +47,23 @@
 *   This function creates Google Eddystone UID format advertising data
 *
 * Parameters:
-*   eddystone_ranging_data:        Calibrated TX power
-*   eddystone_namespace:       UID namespace
-*   eddystone_instance:     Instance
-*   adv_data:        Buffer for advertisement data out
-*   adv_len:         Length of advertisement data
+*   uid_data: See structure eddystone_uid_t
 *
 * Return:
 *   None
 *
 **************************************************************************************************/
-void eddystone_set_data_for_uid(uint8_t eddystone_ranging_data,
-                                uint8_t eddystone_namespace[EDDYSTONE_UID_NAMESPACE_LEN],
-                                uint8_t eddystone_instance[EDDYSTONE_UID_INSTANCE_ID_LEN],
+void eddystone_set_data_for_uid(eddystone_uid_t uid_data,
                                 uint8_t adv_data[BEACON_ADV_DATA_MAX], uint8_t *adv_len)
 {
-    uint8_t frame_data[EDDYSTONE_UID_FRAME_LEN];
     beacon_ble_advert_elem_t eddystone_adv_elem[EDDYSTONE_ELEM_NUM];
 
     /* Set common portion of the adv data */
     eddystone_set_data_common(eddystone_adv_elem, EDDYSTONE_FRAME_TYPE_UID, EDDYSTONE_UID_FRAME_LEN);
 
     /* Set frame data */
-    frame_data[0] = EDDYSTONE_FRAME_TYPE_UID;
-    frame_data[1] = eddystone_ranging_data;
-    memcpy( &frame_data[2], eddystone_namespace, EDDYSTONE_UID_NAMESPACE_LEN );
-    memcpy( &frame_data[12], eddystone_instance, EDDYSTONE_UID_INSTANCE_ID_LEN );
-
-    memcpy(&(eddystone_adv_elem[2].data[2]), frame_data, EDDYSTONE_UID_FRAME_LEN);
+    eddystone_adv_elem[2].data[2] = EDDYSTONE_FRAME_TYPE_UID;
+    memcpy(&(eddystone_adv_elem[2].data[3]), &uid_data, sizeof(eddystone_uid_t));
 
     /* Copy the adv data to output buffer */
     beacon_set_adv_data(eddystone_adv_elem, EDDYSTONE_ELEM_NUM, adv_data, adv_len);
@@ -89,35 +77,24 @@ void eddystone_set_data_for_uid(uint8_t eddystone_ranging_data,
 *   This function creates Google Eddystone URL format advertising data
 *
 * Parameters:
-*   tx_power:        Calibrated TX power
-*   urlscheme:       URL scheme
-*   encoded_url:     URL
-*   adv_data:        Buffer for advertisement data out
-*   adv_len:         Length of advertisement data
+*   url_data: See structure eddystone_url_t
 *
 * Return:
 *   None
 *
 **************************************************************************************************/
-void eddystone_set_data_for_url(uint8_t tx_power,
-                                uint8_t urlscheme,
-                                uint8_t encoded_url[EDDYSTONE_URL_VALUE_MAX_LEN],
+void eddystone_set_data_for_url(eddystone_url_t url_data,
                                 uint8_t adv_data[BEACON_ADV_DATA_MAX], uint8_t *adv_len)
 {
-    uint8_t frame_data[EDDYSTONE_URL_FRAME_LEN];
-    uint8_t len = strlen((char *)encoded_url);
+    uint8_t len = strlen((char *)url_data.encoded_url);
     beacon_ble_advert_elem_t eddystone_adv_elem[EDDYSTONE_ELEM_NUM];
 
     /* Set common portion of the adv data */
     eddystone_set_data_common(eddystone_adv_elem, EDDYSTONE_FRAME_TYPE_URL, len + 3);
 
     /* Set frame data */
-    frame_data[0] = EDDYSTONE_FRAME_TYPE_URL;
-    frame_data[1] = tx_power;
-    frame_data[2] = urlscheme;
-    memcpy(&frame_data[3], encoded_url, len);
-
-    memcpy(&(eddystone_adv_elem[2].data[2]), frame_data, len+3);
+    eddystone_adv_elem[2].data[2] = EDDYSTONE_FRAME_TYPE_URL;
+    memcpy(&(eddystone_adv_elem[2].data[3]), &url_data, len+3);
 
     /* Copy the adv data to output buffer */
     beacon_set_adv_data(eddystone_adv_elem, EDDYSTONE_ELEM_NUM, adv_data, adv_len);

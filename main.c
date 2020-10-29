@@ -42,7 +42,8 @@
 /*******************************************************************************
 *        Header Files
 *******************************************************************************/
-#include "app_bt_cfg.h"
+#include "app_platform_cfg.h"
+#include "cycfg_bt_settings.h"
 #include "wiced_bt_stack.h"
 #include "cybsp.h"
 #include "cy_retarget_io.h"
@@ -67,16 +68,16 @@
 #define DOT_COM (0x07)
 
 /* Minimum and maximum ADV interval */
-#define ADVERT_INTERVAL_MIN (20)
-#define ADVERT_INTERVAL_MAX (100)
+#define ADVERT_INTERVAL_MIN 0x00A0 /* This is a requirement for BLE version 4.2 */
+#define ADVERT_INTERVAL_MAX BTM_BLE_ADVERT_INTERVAL_MAX
 
 /*******************************************************************************
 *        Variable Definitions
 *******************************************************************************/
 wiced_bt_ble_multi_adv_params_t adv_parameters =
 {
-    .adv_int_min = 0x00A0, /* This is a requirement for BLE version 4.2 */
-    .adv_int_max = BTM_BLE_ADVERT_INTERVAL_MAX,
+    .adv_int_min = ADVERT_INTERVAL_MIN,
+    .adv_int_max = ADVERT_INTERVAL_MAX,
     .adv_type = MULTI_ADVERT_NONCONNECTABLE_EVENT,
     .channel_map = BTM_BLE_ADVERT_CHNL_37 | BTM_BLE_ADVERT_CHNL_38 | BTM_BLE_ADVERT_CHNL_39,
     .adv_filter_policy = BTM_BLE_ADVERT_FILTER_ALL_CONNECTION_REQ_ALL_SCAN_REQ,
@@ -86,6 +87,9 @@ wiced_bt_ble_multi_adv_params_t adv_parameters =
     .own_bd_addr = {0},
     .own_addr_type = BLE_ADDR_PUBLIC
 };
+
+/* This enables RTOS aware debugging. */
+volatile int uxTopUsedPriority;
 
 /*******************************************************************************
 *        Function Prototypes
@@ -108,6 +112,9 @@ static wiced_bt_dev_status_t  app_bt_management_callback (wiced_bt_management_ev
 int main()
 {
     cy_rslt_t result ;
+
+    /* This enables RTOS aware debugging in OpenOCD. */
+    uxTopUsedPriority = configMAX_PRIORITIES - 1;
 
     /* Initialize the board support package */
     if(CY_RSLT_SUCCESS != cybsp_init())
@@ -167,7 +174,8 @@ wiced_result_t app_bt_management_callback(wiced_bt_management_evt_t event, wiced
 {
     wiced_result_t status = WICED_BT_SUCCESS;
     wiced_bt_device_address_t bda = { 0 };
-    wiced_bt_ble_advert_mode_t *p_adv_mode = NULL;
+    wiced_bt_multi_adv_opcodes_t multi_adv_resp_opcode;
+    uint8_t multi_adv_resp_status = 0;
 
     switch (event)
     {
@@ -185,18 +193,44 @@ wiced_result_t app_bt_management_callback(wiced_bt_management_evt_t event, wiced
         }
         break;
 
-    case BTM_BLE_ADVERT_STATE_CHANGED_EVT:
+    case BTM_MULTI_ADVERT_RESP_EVENT:
 
-        /* Advertisement State Changed */
-        p_adv_mode = &p_event_data->ble_advert_state_changed;
-        if (BTM_BLE_ADVERT_OFF == *p_adv_mode)
+        /* Multi ADV Response */
+        multi_adv_resp_opcode = p_event_data->ble_multi_adv_response_event.opcode;
+        multi_adv_resp_status = p_event_data->ble_multi_adv_response_event.status;
+
+        if (SET_ADVT_PARAM_MULTI == multi_adv_resp_opcode)
         {
-            printf("Advertisement turned off\n");
+            if(WICED_SUCCESS == multi_adv_resp_status)
+            {
+                printf("Multi ADV Set Param Event Status: SUCCESS\n");
+            }
+            else
+            {
+                printf("Multi ADV Set Param Event Status: FAILED\n");
+            }
         }
-        else
+        else if (SET_ADVT_DATA_MULTI == multi_adv_resp_opcode)
         {
-            /* Advertisement Started */
-            printf("Advertisement turned on\n");
+            if(WICED_SUCCESS == multi_adv_resp_status)
+            {
+                printf("Multi ADV Set Data Event Status: SUCCESS\n");
+            }
+            else
+            {
+                printf("Multi ADV Set Data Event Status: FAILED\n");
+            }
+        }
+        else if (SET_ADVT_ENABLE_MULTI == multi_adv_resp_opcode)
+        {
+            if(WICED_SUCCESS == multi_adv_resp_status)
+            {
+                printf("Multi ADV Start Event Status: SUCCESS\n");
+            }
+            else
+            {
+                printf("Multi ADV Start Event Status: FAILED\n");
+            }
         }
         break;
 
@@ -230,48 +264,54 @@ static void ble_app_set_advertisement_data(void)
     /* Eddystone UID advertising packet */
     uint8_t uid_packet[BEACON_ADV_DATA_MAX];
 
-    /* Name for infineon.com with null termination for the string added */
-    uint8_t url[] = {'i', 'n', 'f', 'i', 'n', 'e', 'o', 'n', DOT_COM, 0x00};
-    uint8_t uid_namespace[] = {0xFE, 0xED, 0xBE, 0xEF, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
-    uint8_t uid_instance[] = {0x12, 0x34, 0x56, 0x78, 0x9A, 0xBC};
+    /* Eddystone URL data */
+    eddystone_url_t url_data = {adv_parameters.adv_tx_power, EDDYSTONE_URL_SCHEME_0,
+                               {'i', 'n', 'f', 'i', 'n', 'e', 'o', 'n', DOT_COM, 0x00}};
+
+    /* Eddystone UID data */
+    eddystone_uid_t uid_data = {0, {0xFE, 0xED, 0xBE, 0xEF, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},
+                               {0x12, 0x34, 0x56, 0x78, 0x9A, 0xBC}};
 
     /* Set up a URL packet with max power, and implicit "http://www." prefix */
-    eddystone_set_data_for_url( adv_parameters.adv_tx_power, EDDYSTONE_URL_SCHEME_0, url, url_packet, &packet_len);
+    eddystone_set_data_for_url(url_data, url_packet, &packet_len);
 
-    if(WICED_SUCCESS != wiced_set_multi_advertisement_data(url_packet, packet_len, BEACON_EDDYSTONE_URL))
+    /* The multi ADV APIs will return pending status now and will give the success/failure
+     * status in the BTM_MULTI_ADVERT_RESP_EVENT callback event
+     */
+    if(WICED_BT_PENDING != wiced_set_multi_advertisement_data(url_packet, packet_len, BEACON_EDDYSTONE_URL))
     {
         printf("Set data for URL ADV failed\n");
         CY_ASSERT(0);
     }
 
-    if(WICED_SUCCESS != wiced_set_multi_advertisement_params(BEACON_EDDYSTONE_URL, &adv_parameters))
+    if(WICED_BT_PENDING != wiced_set_multi_advertisement_params(BEACON_EDDYSTONE_URL, &adv_parameters))
     {
         printf("Set params for URL ADV failed\n");
         CY_ASSERT(0);
     }
 
-    if(WICED_SUCCESS != wiced_start_multi_advertisements(MULTI_ADVERT_START, BEACON_EDDYSTONE_URL))
+    if(WICED_BT_PENDING != wiced_start_multi_advertisements(MULTI_ADVERT_START, BEACON_EDDYSTONE_URL))
     {
         printf("Start ADV for URL ADV failed\n");
         CY_ASSERT(0);
     }
 
     /* Set up a UID packet with ranging_data = 0, and the uid_namespace and uid_instance values declared above */
-    eddystone_set_data_for_uid(0, uid_namespace, uid_instance, uid_packet, &packet_len);
+    eddystone_set_data_for_uid(uid_data, uid_packet, &packet_len);
 
-    if(WICED_SUCCESS != wiced_set_multi_advertisement_data(uid_packet, packet_len, BEACON_EDDYSTONE_UID))
+    if(WICED_BT_PENDING != wiced_set_multi_advertisement_data(uid_packet, packet_len, BEACON_EDDYSTONE_UID))
     {
         printf("Set data for UID ADV failed\n");
         CY_ASSERT(0);
     }
 
-    if(WICED_SUCCESS != wiced_set_multi_advertisement_params(BEACON_EDDYSTONE_UID, &adv_parameters))
+    if(WICED_BT_PENDING != wiced_set_multi_advertisement_params(BEACON_EDDYSTONE_UID, &adv_parameters))
     {
         printf("Set params for UID ADV failed\n");
         CY_ASSERT(0);
     }
 
-    if(WICED_SUCCESS != wiced_start_multi_advertisements(MULTI_ADVERT_START, BEACON_EDDYSTONE_UID))
+    if(WICED_BT_PENDING != wiced_start_multi_advertisements(MULTI_ADVERT_START, BEACON_EDDYSTONE_UID))
     {
         printf("Start ADV for UID ADV failed\n");
         CY_ASSERT(0);
