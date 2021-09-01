@@ -4,24 +4,24 @@
 * Description:This is the source code for the eddystone utility
 * functions
 *
-*******************************************************************************/
-/*******************************************************************************
-* (c) 2020, Cypress Semiconductor Corporation. All rights reserved.
 *******************************************************************************
-* This software, including source code, documentation and related materials
-* ("Software"), is owned by Cypress Semiconductor Corporation or one of its
-* subsidiaries ("Cypress") and is protected by and subject to worldwide patent
-* protection (United States and foreign), United States copyright laws and
-* international treaty provisions. Therefore, you may use this Software only
-* as provided in the license agreement accompanying the software package from
-* which you obtained this Software ("EULA").
+* Copyright 2020-2021, Cypress Semiconductor Corporation (an Infineon company) or
+* an affiliate of Cypress Semiconductor Corporation.  All rights reserved.
 *
+* This software, including source code, documentation and related
+* materials ("Software") is owned by Cypress Semiconductor Corporation
+* or one of its affiliates ("Cypress") and is protected by and subject to
+* worldwide patent protection (United States and foreign),
+* United States copyright laws and international treaty provisions.
+* Therefore, you may use this Software only as provided in the license
+* agreement accompanying the software package from which you
+* obtained this Software ("EULA").
 * If no EULA applies, Cypress hereby grants you a personal, non-exclusive,
-* non-transferable license to copy, modify, and compile the Software source
-* code solely for use in connection with Cypress's integrated circuit products.
-* Any reproduction, modification, translation, compilation, or representation
-* of this Software except as specified above is prohibited without the express
-* written permission of Cypress.
+* non-transferable license to copy, modify, and compile the Software
+* source code solely for use in connection with Cypress's
+* integrated circuit products.  Any reproduction, modification, translation,
+* compilation, or representation of this Software except as specified
+* above is prohibited without the express written permission of Cypress.
 *
 * Disclaimer: THIS SOFTWARE IS PROVIDED AS-IS, WITH NO WARRANTY OF ANY KIND,
 * EXPRESS OR IMPLIED, INCLUDING, BUT NOT LIMITED TO, NONINFRINGEMENT, IMPLIED
@@ -32,9 +32,13 @@
 * not authorize its products for use in any products where a malfunction or
 * failure of the Cypress product may reasonably be expected to result in
 * significant property damage, injury or death ("High Risk Product"). By
-* including Cypress's product in a High Risk Product, the manufacturer of such
-* system or application assumes all risk of such use and in doing so agrees to
-* indemnify Cypress against all liability.
+* including Cypress's product in a High Risk Product, the manufacturer
+* of such system or application assumes all risk of such use and in doing
+* so agrees to indemnify Cypress against all liability.
+*******************************************************************************/
+
+/*******************************************************************************
+* Header Files
 *******************************************************************************/
 
 #ifndef __BEACON_UTILS_H__
@@ -72,18 +76,69 @@
 #define EDDYSTONE_URL_SCHEME_3           (0x03)
 
 /* Definitions for URL frame format */
-#define EDDYSTONE_URL_FRAME_LEN           (20)
-#define EDDYSTONE_URL_VALUE_MAX_LEN       (17)
+#define EDDYSTONE_URL_FRAME_LEN          (20)
+#define EDDYSTONE_URL_VALUE_MAX_LEN      (17)
 
 /* Eddystone UUID*/
-#define EDDYSTONE_UUID16                  (0xFEAA)
+#define EDDYSTONE_UUID16                 (0xFEAA)
 
 /* Number of advertisement elements for Eddystone */
-#define EDDYSTONE_ELEM_NUM                (3)
+#define EDDYSTONE_NUM_ELEM_URL           (3)
 
 /* Max ADV data length */
-#define BEACON_ADV_DATA_MAX (31)
+#define BEACON_ADV_DATA_MAX              (31)
 
+#define EDDYSTONE_ADV_INDEX0             (0)
+#define EDDYSTONE_ADV_INDEX1             (1)
+#define EDDYSTONE_ADV_INDEX2             (2)
+#define EDDYSTONE_ADV_DATA_INDEX0        (0)
+#define EDDYSTONE_ADV_DATA_INDEX1        (1)
+#define EDDYSTONE_ADV_DATA_INDEX2        (2)
+#define EDDYSTONE_ADV_DATA_INDEX3        (3)
+#define EDDYSTONE_UUID_INDEX0            (0)
+#define EDDYSTONE_UUID_INDEX1            (1)
+#define EDDYSTONE_URL_COM_LENGTH         (3)
+#define EDDYSTONE_SERVICE_DATA_LENGTH    (3)
+
+
+#define ADV_PKT_FLAG_LENGTH              (2)
+#define ADV_PKT_16SRV_LENGTH             (3)
+#define UUID_LENGTH                      (2)
+
+
+/* iBeacon type */
+#define IBEACON_TYPE                     (0x01)
+#define IBEACON_PROXIMITY                (0x02),(0x15)
+/* iBeacon company ID */
+#define IBEACON_COMPANY_ID_APPLE         (0x4c),(0x00)
+/* iBeacon data length */
+#define IBEACON_DATA_LENGTH              (0x19)
+/* iBeacon adv packet length */
+#define IBEACON_ADV_PKT_LENGTH           (IBEACON_DATA_LENGTH + 1)
+
+/* Number of elements in advertisement */
+#define IBEACON_ELEM_NUM                 (2)
+#define IBEACON_MAJOR_NUMER              (0x01)
+#define IBEACON_MINOR_NUMER              (0x02)
+#define TX_POWER_LEVEL                   (0xB3)
+
+#define IBEACON_ADV_INDEX0               (0)
+#define IBEACON_ADV_INDEX1               (1)
+#define IBEACON_DATA_INDEX2              (2)
+#define IBEACON_DATA_INDEX3              (3)
+#define IBEACON_DATA_INDEX4              (4)
+#define IBEACON_DATA_INDEX20             (20)
+#define IBEACON_DATA_INDEX21             (21)
+#define IBEACON_DATA_INDEX22             (22)
+#define IBEACON_DATA_INDEX23             (23)
+#define IBEACON_TX_POWER_INDEX           (24)
+#define IBEACON_DATA_COMPANY_ID_INDEX0   (0)
+#define IBEACON_DATA_COMPANY_ID_INDEX1   (1)
+#define IBEACON_DATA_TYPE_INDEX0         (0)
+#define IBEACON_DATA_TYPE_INDEX1         (1)
+#define IBEACON_ADV_DATA0                (0)
+#define IBEACON_DATA_INDEX0              (0)
+#define IBEACON_DATA_INDEX1              (1)
 /******************************************************************************
  *                                Structures
  ******************************************************************************/
@@ -114,17 +169,30 @@ typedef struct __attribute__((packed, aligned(1)))
 /****************************************************************************
  *                              FUNCTION DECLARATIONS
  ***************************************************************************/
-void eddystone_set_data_for_uid(eddystone_uid_t uid_data,
-                                uint8_t adv_data[BEACON_ADV_DATA_MAX], uint8_t *adv_len);
 
-void eddystone_set_data_for_url(eddystone_url_t url_data,
-                                uint8_t adv_data[BEACON_ADV_DATA_MAX], uint8_t *adv_len);
+void eddystone_set_data_for_url  (eddystone_url_t url_data,
+                                  uint8_t adv_data[BEACON_ADV_DATA_MAX],
+                                  uint8_t *adv_len);
 
-void eddystone_set_data_common(beacon_ble_advert_elem_t *eddystone_adv_elem,
-                                                       uint8_t frame_type, uint8_t frame_len);
+void eddystone_set_data_common   (beacon_ble_advert_elem_t *eddystone_adv_elem,
+                                  uint8_t frame_type, uint8_t frame_len);
 
-void beacon_set_adv_data(beacon_ble_advert_elem_t *beacon_adv_elem, uint8_t num_elem,
-                                  uint8_t adv_data[BEACON_ADV_DATA_MAX], uint8_t *adv_len);
+void beacon_set_adv_data         (beacon_ble_advert_elem_t *beacon_adv_elem,
+                                  uint8_t num_elem,
+                                  uint8_t adv_data[BEACON_ADV_DATA_MAX],
+                                  uint8_t *adv_len);
+
+void ibeacon_set_adv_data        (uint8_t ibeacon_uuid[LEN_UUID_128],
+                                   uint16_t ibeacon_major_number,
+                                   uint16_t ibeacon_minor_number,
+                                   uint8_t tx_power_lcl,
+                                   uint8_t adv_data[BEACON_ADV_DATA_MAX],
+                                   uint8_t *adv_len);
+void beacon_bt_set_adv_data     (beacon_ble_advert_elem_t *beacon_adv_elem,
+                                 uint8_t num_elem,
+                                 uint8_t adv_data[BEACON_ADV_DATA_MAX],
+                                 uint8_t *adv_len);
+
 
 #endif      /* __BEACON_UTILS_H__ */
 
